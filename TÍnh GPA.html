@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!-- saved from url=(0053)file:///C:/Users/quanh/Downloads/T%C3%8Dnh%20GPA.html -->
+<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <title>TÍnh GPA</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      position: relative;
+    }
+
+    .container {
+      display: flex;
+      height: 100%;
+    }
+
+    .input-panel {
+      width: 280px;
+      padding: 1em;
+      border-right: 1px solid #ddd;
+      box-sizing: border-box;
+    }
+
+    .input-panel h2 {
+      margin-top: 0;
+    }
+
+    .input-panel label {
+      display: block;
+      margin: 0.6em 0;
+    }
+
+    .input-panel input,
+    .input-panel select,
+    .input-panel button {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .results-panel {
+      flex: 1;
+      padding: 1em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      max-width: 600px;
+      border-collapse: collapse;
+      margin-bottom: 1em;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      text-align: center;
+    }
+
+    .center {
+      text-align: center;
+      font-size: 1.2em;
+      margin-top: 0;
+    }
+
+    .action-btn {
+      margin: 0 0.2em;
+      padding: 0.2em 0.5em;
+    }
+
+    .error-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #d00;
+      color: #fff;
+      padding: 0.6em 1em;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="input-panel">
+      <h2>Tính điểm</h2>
+      <label>
+        Tên học phần:
+        <input type="text" id="name">
+      </label>
+      <label>
+        Hệ số:
+        <select id="weights">
+          <option value="0.3/0.7">0.3 / 0.7</option>
+          <option value="0.4/0.6">0.4 / 0.6</option>
+          <option value="0.5/0.5">0.5 / 0.5</option>
+        </select>
+      </label>
+      <label>
+        Điểm quá trình:
+        <input type="number" id="mid" step="0.1" min="0" max="10">
+      </label>
+      <label>
+        Điểm cuối kỳ:
+        <input type="number" id="final" step="0.1" min="0" max="10">
+      </label>
+      <label>
+        Số tín chỉ:
+        <select id="credits">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="6">6</option>
+        </select>
+      </label>
+      <button onclick="addCourse()">Add</button>
+    </div>
+
+    <div class="results-panel">
+      <table id="courses">
+        <thead>
+          <tr>
+            <th>Học phần</th>
+            <th>Điểm học phần</th>
+            <th>Điểm chữ</th>
+            <th>Điểm hệ 4</th>
+            <th>Số tín</th>
+            <th>Sửa chữa</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h2 class="center">
+        GPA: <span id="gpa">0.00</span>
+      </h2>
+    </div>
+
+  </div>
+
+  <a href="https://facebook.com/x2r2r9" target="_blank" class="error-btn">
+    Báo lỗi
+  </a>
+
+  <script>
+    const gradeMap = [
+      { min: 9.5, letter: 'A+', point: 4.0 },
+      { min: 8.5, letter: 'A',  point: 4.0 },
+      { min: 8.0, letter: 'B+', point: 3.5 },
+      { min: 7.0, letter: 'B',  point: 3.0 },
+      { min: 6.5, letter: 'C+', point: 2.5 },
+      { min: 5.5, letter: 'C',  point: 2.0 },
+      { min: 5.0, letter: 'D+', point: 1.5 },
+      { min: 4.0, letter: 'D',  point: 1.0 },
+    ];
+
+    function calcFinalScore(mid, fin, w1, w2) {
+      return parseFloat((mid * w1 + fin * w2).toFixed(2));
+    }
+
+    function getGrade(score, mid, fin) {
+      if (mid < 3 || fin < 3 || score < 4.0) {
+        return { letter: 'F', point: 0 };
+      }
+      for (let g of gradeMap) {
+        if (score >= g.min) return { letter: g.letter, point: g.point };
+      }
+      return { letter: 'F', point: 0 };
+    }
+
+    function addCourse() {
+      const nameEl  = document.getElementById('name');
+      const [w1, w2] = document.getElementById('weights').value.split('/').map(Number);
+      const mid      = parseFloat(document.getElementById('mid').value);
+      const fin      = parseFloat(document.getElementById('final').value);
+      const credits  = parseInt(document.getElementById('credits').value, 10);
+
+      const finalScore = calcFinalScore(mid, fin, w1, w2);
+      const grade      = getGrade(finalScore, mid, fin);
+
+      const tbody = document.querySelector('#courses tbody');
+      const row   = tbody.insertRow();
+      row.dataset.weights = `${w1}/${w2}`;
+      row.dataset.mid     = mid;
+      row.dataset.fin     = fin;
+
+      row.innerHTML = `
+        <td>${nameEl.value}</td>
+        <td>${finalScore}</td>
+        <td>${grade.letter}</td>
+        <td>${grade.point.toFixed(1)}</td>
+        <td>${credits}</td>
+        <td>
+          <button class="action-btn edit-btn">Edit</button>
+          <button class="action-btn delete-btn">Delete</button>
+        </td>
+      `;
+
+      row.querySelector('.delete-btn')
+         .addEventListener('click', () => {
+           row.remove();
+           updateGPA();
+         });
+
+      row.querySelector('.edit-btn')
+         .addEventListener('click', () => {
+           document.getElementById('name').value     = row.cells[0].textContent;
+           document.getElementById('weights').value  = row.dataset.weights;
+           document.getElementById('mid').value      = row.dataset.mid;
+           document.getElementById('final').value    = row.dataset.fin;
+           document.getElementById('credits').value  = row.cells[4].textContent;
+           row.remove();
+           updateGPA();
+         });
+
+      updateGPA();
+      clearInputs();
+    }
+
+    function updateGPA() {
+      const rows = document.querySelectorAll('#courses tbody tr');
+      let sumP = 0, sumC = 0;
+      rows.forEach(r => {
+        const p = parseFloat(r.cells[3].textContent);
+        const c = parseInt(r.cells[4].textContent, 10);
+        sumP += p * c;
+        sumC += c;
+      });
+      document.getElementById('gpa').textContent =
+        sumC ? (sumP / sumC).toFixed(2) : '0.00';
+    }
+
+    function clearInputs() {
+      ['name','mid','final'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('weights').selectedIndex = 0;
+      document.getElementById('credits').selectedIndex = 0;
+    }
+  </script>
+
+
+
+</body></html>
